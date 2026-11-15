@@ -1,0 +1,6 @@
+kernel correlation sklearn vs Conv1d: 0.9453
+intercept sklearn -0.0011  Conv1d bias +0.0023
+subject 2: r(sklearn, ECG)=0.0363  r(Conv1d, ECG)=0.0512  r(sklearn, Conv1d)=0.9197
+subject 5: r(sklearn, ECG)=-0.0374  r(Conv1d, ECG)=-0.0567  r(sklearn, Conv1d)=0.9390
+subject 8: r(sklearn, ECG)=0.1406  r(Conv1d, ECG)=0.0897  r(sklearn, Conv1d)=0.9242
+subject 10: r(sklearn, ECG)=-0.3582  r(Conv1d, ECG)=-0.2944  r(sklearn, Conv1d)=0.9674

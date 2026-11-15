@@ -1,0 +1,16 @@
+# environment
+.venv/
+__pycache__/
+*.pyc
+
+# data: download CEBS from PhysioNet (see README); cache is rebuilt on demand
+data/
+
+# trained weights
+*.pt
+
+# not ours to publish / personal: IEEE paper PDF, project plan, original notebooks and EDF copies
+*.pdf
+*.zip
+3-2Project-main/
+things_to_do.txt

@@ -1,0 +1,10 @@
+# Python 3.13; torch 2.13 + CUDA 12.6 was installed system-wide and reused via `python -m venv --system-site-packages .venv`
+torch>=2.5
+numpy
+scipy>=1.14
+pandas
+matplotlib
+scikit-learn
+wfdb>=4.1
+neurokit2>=0.2.10
+tabulate
