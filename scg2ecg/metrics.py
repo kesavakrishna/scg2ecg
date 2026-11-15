@@ -103,3 +103,32 @@ def score(targets: list[np.ndarray], preds: list[np.ndarray], refs: list[np.ndar
         parts = [beat_counts(r, detect_r_peaks(pr, fs), len(pr), fs) for pr, r in zip(preds, refs)]
         out.update(summarize_beats(parts))
     return out
+
+
+def morphology(targets: list[np.ndarray], preds: list[np.ndarray], refs: list[np.ndarray], fs: int,
+               pre_ms: float = 250.0, post_ms: float = 450.0) -> dict:
+    """Beat shape, cut at the database's R-peak marks (so no detector enters).
+
+    template_r      correlation of the output's average beat with the real average beat
+    beat_r          median per-beat correlation (each output beat with the real beat at the same time)
+    r_amp_ratio     median R amplitude of the output / of the real ECG (R = max within +-30 ms of the mark,
+                    minus the beat's median). Below 1: flattened beats, the usual sign of regression to the mean
+    """
+    a, b = int(pre_ms * fs / 1000), int(post_ms * fs / 1000)
+    w = int(30 * fs / 1000)
+    T, P = [], []
+    for t, p, r in zip(targets, preds, refs):
+        r = np.asarray(r)
+        r = r[(r >= a) & (r < len(t) - b)]
+        T += [t[i - a:i + b] for i in r]
+        P += [p[i - a:i + b] for i in r]
+    if len(T) < 2:
+        return {k: float("nan") for k in ("template_r", "beat_r", "r_amp_ratio")}
+    T, P = np.asarray(T, np.float64), np.asarray(P, np.float64)
+
+    def amp(X):
+        return np.median(X[:, a - w:a + w + 1].max(1) - np.median(X, 1))
+
+    return {"template_r": pearson(T.mean(0), P.mean(0)),
+            "beat_r": float(np.median([pearson(x, y) for x, y in zip(T, P)])),
+            "r_amp_ratio": float(amp(P) / amp(T))}
