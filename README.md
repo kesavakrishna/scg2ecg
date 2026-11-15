@@ -21,8 +21,11 @@ Run the steps from the repo root, in order:
 ```
 .venv\Scripts\python -m scripts.data_check        # results/data_check
 .venv\Scripts\python -m scripts.baselines         # results/baselines
+.venv\Scripts\python -m scripts.replicate_original  # results/replication (the original model, ported)
 .venv\Scripts\python -m scripts.simple_models     # results/simple_models (ridge, U-Net)
 ```
+
+`docs/01_original.md` describes what the original code did and what the port reproduces.
 
 ## Evaluation rules
 
@@ -48,6 +51,7 @@ annotations (`scg2ecg/data.py: usable_records`).
 
 ```
 scg2ecg/   data loading, splits, metrics, baselines, models, windowing
+docs/      notes on each phase
 scripts/   one script per step; each writes results/<step>/summary.md
 results/   generated tables and figures
 ```
