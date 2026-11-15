@@ -6,7 +6,9 @@ after-music record (p): ECG leads I and II, respiration and one SCG axis, all at
 Two facts about the files shape everything here:
   * For subjects 2-20 the rest record is a byte-identical copy of the after-music record
     (b002.dat == p002.dat, ...). Only subject 1 has three distinct records. `usable_records` keeps
-    one copy, so no signal can sit in both a training set and a test set.
+    one copy, so no signal can sit in both a training set and a test set. The annotation files were not
+    copied: b002.atr-b020.atr still mark the beats of the genuine rest recordings, so they do not match the
+    bNNN.dat signal. Use pNNN.atr with those signals.
   * The .atr files mark every beat twice: channel 0 is the lead I QRS mark, channel 1 the lead II mark.
 """
 from __future__ import annotations

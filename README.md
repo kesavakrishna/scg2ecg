@@ -39,8 +39,10 @@ Run the steps from the repo root, in order:
 ## A data note
 
 In CEBS 1.0.0 the rest record of subjects 2-20 is a byte-identical copy of the after-music record
-(`b002.dat == p002.dat`, ...). Only subject 1 has a distinct rest record. This code uses each signal once
-(`scg2ecg/data.py: usable_records`).
+(`b002.dat == p002.dat`, ...). Only subject 1 has a distinct rest record. The annotation files were not
+copied: `b002.atr`-`b020.atr` still mark the beats of the genuine (now missing) rest recordings, so they
+do not line up with the `bNNN.dat` signals. This code uses each signal once, with its matching
+annotations (`scg2ecg/data.py: usable_records`).
 
 ## Layout
 

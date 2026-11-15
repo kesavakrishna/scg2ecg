@@ -29,6 +29,7 @@ import wfdb
 from scipy.stats import wilcoxon
 
 from scg2ecg.baselines import AverageBeat
+from scg2ecg.data import duplicate_of
 from scg2ecg.legacy import legacy_data, predict, train_gan, train_supervised
 from scg2ecg.metrics import beat_counts, detect_r_peaks, pearson, prd, prd_legacy, rmse, summarize_beats
 from scg2ecg.paths import RAW, RESULTS
@@ -41,7 +42,10 @@ SAVED = {(1, "gan2021"): [0.877], (10, "gan2023"): [0.790, 0.771]}
 
 
 def r_marks(subject: int) -> np.ndarray:
-    ann = wfdb.rdann(str(RAW / f"b{subject:03d}"), "atr")
+    """Lead I beat marks for the rest EDF. For subjects 2-20 the rest signal is a copy of the after-music
+    signal, but bNNN.atr still marks the genuine rest recording's beats, so the matching marks are pNNN.atr."""
+    name = f"b{subject:03d}"
+    ann = wfdb.rdann(str(RAW / (duplicate_of(name) or name)), "atr")
     return np.round(ann.sample[ann.chan == 0] / 5).astype(np.int64)
 
 
