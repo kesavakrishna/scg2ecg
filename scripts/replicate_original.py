@@ -1,9 +1,9 @@
 """Replication rung: the 2021 notebook's protocol and model, ported faithfully, on each development person.
 
 Per person (rest EDF; first 75% of 1 s windows train, last 25% test; same person, same record):
-  gan2021   the notebook's model and training loop                        (5 seeds)
-  sup2021   ablation: same generator, only the direct Huber loss           (5 seeds)
-  gan2023   the 2023 re-run variant (LayerNorm over time), subjects 1, 10  (5 seeds)
+  gan2021   the notebook's model and training loop                        (3 seeds)
+  sup2021   ablation: same generator, only the direct Huber loss           (3 seeds)
+  gan2023   the 2023 re-run variant (LayerNorm over time), subjects 1, 10  (3 seeds)
   avg_beat         the average-heartbeat baseline fitted on the same 75%  (no learning, no seed)
   avg_beat_true_r  the same average beat pasted at the true R-peaks
 
@@ -16,9 +16,7 @@ Run from the repo root:  .venv\\Scripts\\python -m scripts.replicate_original
 """
 from __future__ import annotations
 
-import multiprocessing as mp
 import time
-from concurrent.futures import ProcessPoolExecutor
 
 import matplotlib
 
@@ -37,7 +35,7 @@ from scg2ecg.paths import RAW, RESULTS
 from scg2ecg.splits import get_splits
 
 FS = 1000
-SEEDS = range(5)
+SEEDS = range(3)
 OUT = RESULTS / "replication"
 SAVED = {(1, "gan2021"): [0.877], (10, "gan2023"): [0.790, 0.771]}
 
@@ -101,6 +99,7 @@ def run_subject(s: int) -> tuple[list[dict], dict]:
                          "out_std_noise_input": float(out_noise.std(axis=(1, 2)).mean()),
                          "target_std": float(target.reshape(-1, 1000).std(1).mean()),
                          "seconds": time.time() - t0, **extra})
+            print(f"  subject {s} {method} seed {seed}: r={rows[-1]['r']:.3f} ({time.time() - t0:.0f}s)", flush=True)
             if seed == 0:
                 keep[(s, method)] = pred
     return rows, keep
@@ -111,14 +110,15 @@ def main():
     sp = get_splits()
     rows, keep = [], {}
     t0 = time.time()
-    with ProcessPoolExecutor(max_workers=3, mp_context=mp.get_context("spawn")) as pool:
-        for s_rows, s_keep in pool.map(run_subject, sp["dev"]):
-            rows += s_rows
-            keep.update(s_keep)
-            sub = pd.DataFrame(s_rows)
-            print(f"[{(time.time() - t0) / 60:5.1f} min] subject {sub.subject.iloc[0]:2d}: " +
-                  "  ".join(f"{m} r={g['r'].mean():.3f}" for m, g in sub.groupby("method", sort=False)), flush=True)
-            pd.DataFrame(rows).to_csv(OUT / "per_run.csv", index=False)
+    # one process: three workers sharing an 8 GB laptop GPU ran slower than one
+    for s_rows, s_keep in map(run_subject, sp["dev"]):
+        rows += s_rows
+        keep.update(s_keep)
+        sub = pd.DataFrame(s_rows)
+        print(f"[{(time.time() - t0) / 60:5.1f} min] subject {sub.subject.iloc[0]:2d}: " +
+              "  ".join(f"{m} r={g['r'].mean():.3f}" for m, g in sub.groupby("method", sort=False)), flush=True)
+        pd.DataFrame(rows).to_csv(OUT / "per_run.csv", index=False)
+
 
     df = pd.DataFrame(rows)
     df.to_csv(OUT / "per_run.csv", index=False)
@@ -141,7 +141,7 @@ def main():
     saved = []
     for (s, m), vals in SAVED.items():
         ours = df[(df.subject == s) & (df.method == m)]["r"]
-        saved.append(f"- subject {s}, {m}: saved notebook r = {vals}; port, 5 seeds: "
+        saved.append(f"- subject {s}, {m}: saved notebook r = {vals}; port, 3 seeds: "
                      f"{np.round(ours.values, 3).tolist()} (mean {ours.mean():.3f})")
 
     gan = df[df.method == "gan2021"]
@@ -151,8 +151,8 @@ def main():
         "5 min record), z-scored unfiltered lead I at 1 kHz, 1 epoch, batch size 1. 16 development people.", "",
         "## Against the notebook's saved numbers", "", *saved, "",
         "## Mean over people (seed-averaged)", "", means.to_markdown(), "",
-        "## Pearson r per person (mean over 5 seeds where seeded)", "", pr.round(3).to_markdown(), "",
-        "## Seed spread: SD of r across 5 seeds", "", seed_sd.round(3).to_markdown(), "",
+        "## Pearson r per person (mean over 3 seeds where seeded)", "", pr.round(3).to_markdown(), "",
+        "## Seed spread: SD of r across 3 seeds", "", seed_sd.round(3).to_markdown(), "",
         "## Person-by-person comparisons", "", *tests, "",
         "## Is the discriminator doing anything? (gan2021, last 50 training steps)", "",
         f"- D loss: mean {gan['d_loss_last50'].mean():.4f}, SD across runs {gan['d_loss_last50'].std():.4f}",
