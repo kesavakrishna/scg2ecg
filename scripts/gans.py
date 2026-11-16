@@ -32,7 +32,7 @@ from scipy.stats import wilcoxon
 from scg2ecg.baselines import AverageBeat
 from scg2ecg.data import prepared
 from scg2ecg.gans import GanConfig, train_gan
-from scg2ecg.metrics import morphology, score
+from scg2ecg.metrics import morphology, pearson, score
 from scg2ecg.models import UNet1d
 from scg2ecg.paths import RESULTS
 from scg2ecg.splits import get_splits, segments
@@ -189,12 +189,58 @@ def summarize(out):
              "## Beat shape against the U-Net", "", *shape, "",
              "## Epoch chosen by early stopping (on the 2 tune people)", "", ep.to_markdown(), "",
              "## Pearson r per person", "", piv.reindex(columns=order).round(3).to_markdown(), "",
+             *lag_lines(out),
              "Beat-shape metrics (scg2ecg/metrics.py: morphology) are cut at the database's R-peak marks: "
              "template_r = average output beat vs average real beat; beat_r = median per-beat correlation; "
              "r_amp_ratio = output R amplitude / real (below 1: flattened beats; timing errors also lower it).",
              f"Training histories: histories.csv ({len(hist)} epochs)."]
     (out / "summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines))
+
+
+def lag_analysis(sp, out, max_ms: float = 200.0) -> pd.DataFrame:
+    """How much of the error is a constant time shift? For each person and model, the shift (within +-max_ms)
+    that maximises r between output and real ECG, and r at that shift. A positive lag: the output is late."""
+    rows = []
+    L = int(max_ms * FS / 1000)
+    models = ["unet", "pix2pix_adv0.1", "cycle_paired", "cycle_unpaired"]
+    for k, fold in enumerate(sp["folds"]):
+        for m in models:
+            for seed in SEEDS:
+                path = (RESULTS / "simple_models" / f"unet_unseen_fold{k}_seed{seed}.pt") if m == "unet" \
+                    else out / f"{m}_fold{k}_seed{seed}.pt"
+                G = UNet1d().to(DEV)
+                G.load_state_dict(torch.load(path, map_location=DEV))
+                G.eval()
+                for s in fold["test"]:
+                    test = segs([s], "late")
+                    y = np.concatenate([t["y"][L:-L] for t in test])
+                    preds = [stitch_predict(G, t["x"], LEN, DEV) for t in test]
+                    rs = [pearson(y, np.concatenate([p[L - d:len(p) - L - d] for p in preds]))
+                          for d in range(-L, L + 1)]
+                    j = int(np.argmax(rs))
+                    rows.append({"method": m, "fold": k, "seed": seed, "subject": s, "r_lag0": rs[L],
+                                 "best_lag_ms": (L - j) * 1000 / FS, "r_best_lag": rs[j]})
+        print(f"lags fold {k} done", flush=True)
+    df = pd.DataFrame(rows)
+    df.to_csv(out / "lags.csv", index=False)
+    return df
+
+
+def lag_lines(out) -> list[str]:
+    if not (out / "lags.csv").exists():
+        return []
+    lg = pd.read_csv(out / "lags.csv").groupby(["method", "subject"]).mean(numeric_only=True).reset_index()
+    tab = lg.groupby("method").agg(r_lag0=("r_lag0", "mean"), r_best_lag=("r_best_lag", "mean"),
+                                   median_abs_lag_ms=("best_lag_ms", lambda v: np.median(np.abs(v))))
+    per = lg.pivot(index="subject", columns="method", values="best_lag_ms")
+    rr = lg.pivot(index="subject", columns="method", values="r_best_lag")
+    return ["## How much is a time shift? (lags.csv)", "",
+            "For each person, the constant shift of the output (within +-200 ms) that maximises r, averaged over "
+            "seeds; positive = output late. r_best_lag is r after that shift: the shape skill left once timing "
+            "is corrected by hand (an upper bound, since the shift is chosen on the test data).", "",
+            tab.round(3).to_markdown(), "", "Best shift per person (ms):", "", per.round(0).to_markdown(), "",
+            "r after the best shift, per person:", "", rr.round(3).to_markdown(), ""]
 
 
 def plot_examples(sp, out):
@@ -232,7 +278,7 @@ def plot_examples(sp, out):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--part", nargs="+", default=["all"], choices=[*CONFIGS, "references", "summary", "all"])
+    ap.add_argument("--part", nargs="+", default=["all"], choices=[*CONFIGS, "references", "lags", "summary", "all"])
     ap.add_argument("--folds", type=int, nargs="+", default=[0, 1, 2, 3])
     ap.add_argument("--seeds", type=int, nargs="+", default=list(SEEDS))
     ap.add_argument("--max-epochs", type=int, default=None, help="override, for smoke tests")
@@ -245,7 +291,7 @@ def main():
         for c in CONFIGS.values():
             c.max_epochs = args.max_epochs
     sp = get_splits()
-    parts = ["references", *CONFIGS, "summary"] if "all" in args.part else args.part
+    parts = ["references", *CONFIGS, "lags", "summary"] if "all" in args.part else args.part
     path = out / "per_person.csv"
     for part in parts:
         if part == "references":
@@ -255,6 +301,8 @@ def main():
             pd.concat([keep, pd.DataFrame(rows)], ignore_index=True).to_csv(path, index=False)
         elif part in CONFIGS:
             run_config(part, sp, args.folds, args.seeds, out, args.retrain)
+        elif part == "lags":
+            lag_analysis(sp, out)
     if "summary" in parts:
         summarize(out)
         plot_examples(sp, out)
