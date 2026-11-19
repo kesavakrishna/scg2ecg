@@ -14,21 +14,32 @@ python -m venv --system-site-packages .venv      # reuses a system torch with CU
 .venv\Scripts\pip install -r requirements.txt
 curl -L -o data/cebsdb-1.0.0.zip https://physionet.org/content/cebsdb/get-zip/1.0.0/
 # unzip so that the records sit in data/files/ (b001.dat, b001.hea, b001.atr, ...)
+# for the external test only (CC BY 4.0, 265 MB):
+curl -L -o data/external/senssmarttech/senssmarttech.zip https://physionet.org/content/senssmarttech/get-zip/1.0.0/
+# unzip and rename the extracted folder to data/external/senssmarttech/sst
 ```
 
-Run the steps from the repo root, in order:
+## Reproduce
 
-```
-.venv\Scripts\python -m scripts.data_check        # results/data_check
-.venv\Scripts\python -m scripts.baselines         # results/baselines
-.venv\Scripts\python -m scripts.replicate_original  # results/replication (the original model, ported)
-.venv\Scripts\python -m scripts.simple_models     # results/simple_models (ridge, U-Net)
-.venv\Scripts\python -m scripts.gans              # results/gans (pix2pix, CycleGAN paired / unpaired)
-.venv\Scripts\python -m scripts.calibration       # results/calibration (10-60 s of a new person's data)
-.venv\Scripts\python -m scripts.calibration --part transfer   # calibration from a separate recording
-.venv\Scripts\python -m scripts.clinical        # results/clinical (intervals, irregular beats, noise input)
-.venv\Scripts\python -m scripts.holdout         # results/holdout (scored once; plan in docs/06)
-```
+Run from the repo root, in this order (later steps load earlier steps' models). Times are approximate on a
+laptop RTX 4060 (8 GB) and 16 CPU cores, about one GPU day in total, mostly the GANs.
+
+| step | command | writes | time |
+|---|---|---|---|
+| data check | `.venv\Scripts\python -m scripts.data_check` | results/data_check | minutes |
+| baselines | `.venv\Scripts\python -m scripts.baselines` | results/baselines | ~15 min |
+| original model, ported | `.venv\Scripts\python -m scripts.replicate_original` | results/replication | ~2 h |
+| ridge, U-Net | `.venv\Scripts\python -m scripts.simple_models` | results/simple_models | ~1.5 h |
+| GANs | `.venv\Scripts\python -m scripts.gans` | results/gans | ~12 h |
+| calibration | `.venv\Scripts\python -m scripts.calibration` (then `--part transfer`) | results/calibration | ~1.5 h |
+| clinical scoring | `.venv\Scripts\python -m scripts.clinical` | results/clinical | ~1.5 h (CPU) |
+| holdout, once | `.venv\Scripts\python -m scripts.holdout` | results/holdout | ~3 h |
+| heartbeat check | `.venv\Scripts\python -m scripts.gate` | results/gate | ~20 min |
+| external test | `.venv\Scripts\python -m scripts.external` | results/external | ~30 min |
+| cheaper calibration | `.venv\Scripts\python -m scripts.cheap_calibration` | results/cheap_calibration | ~1 h |
+| leave one out | `.venv\Scripts\python -m scripts.loso` | results/loso | ~1.5 h |
+
+Long steps are resumable: re-running one skips the work already saved.
 
 Set `SCG_DEVICE=cpu` to keep a step off a GPU that other programs are using.
 

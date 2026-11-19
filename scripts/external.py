@@ -49,7 +49,8 @@ from .simple_models import DEV, FS, LEN, SEEDS
 SST = ROOT / "data" / "external" / "senssmarttech" / "sst"
 OUT = RESULTS / "external"
 FT_STEPS = 100
-CALIB_S = (10, 30)
+TRIM_S = 2.0  # 0 reproduces the committed plan exactly; see docs/11_external.md
+CALIB_S = (10, 26) if TRIM_S else (10, 30)  # 26 s = the whole calibration recording after trimming
 METRICS = ["r", "beat_se", "beat_ppv", "r_timing_abs_ms", "template_r", "beat_r", "r_amp_ratio"]
 
 
@@ -68,9 +69,18 @@ def load_rec(row) -> dict:
     ecg = resample_poly(e.p_signal[:, 0].astype(np.float64), 1, 2)
     acc = resample_poly(a.p_signal[:, 0].astype(np.float64), 1, 2)
     n = min(len(ecg), len(acc))
-    y = zscore(bandpass(ecg[:n], *ECG_BAND, FS))
-    scg = bandpass(acc[:n], *SCG_BAND, FS)
-    return {"x": normalize_scg(scg, FS), "scg": scg, "y": y, "r": detect_r_peaks(y, FS)}
+    if not TRIM_S:  # as planned (results/external/*_as_planned.*): the filter's edge transient stays in
+        y = zscore(bandpass(ecg[:n], *ECG_BAND, FS))
+        scg = bandpass(acc[:n], *SCG_BAND, FS)
+        return {"x": normalize_scg(scg, FS), "scg": scg, "y": y, "r": detect_r_peaks(y, FS)}
+    # corrected: the raw lead I sits on a large DC offset, which zero-phase filtering of a 30 s clip turns into a
+    # transient of up to 14 SD at both ends; remove the median first and drop TRIM_S seconds at each end
+    k = int(TRIM_S * FS)
+    y = bandpass(ecg[:n] - np.median(ecg[:n]), *ECG_BAND, FS)[k:n - k]
+    scg = bandpass(acc[:n] - np.median(acc[:n]), *SCG_BAND, FS)
+    x = normalize_scg(scg, FS)[k:n - k]
+    y = zscore(y)
+    return {"x": x, "scg": scg[k:n - k], "y": y, "r": detect_r_peaks(y, FS)}
 
 
 def load_models(m):
@@ -96,7 +106,7 @@ def run() -> pd.DataFrame:
     rows = []
     for s, g in recs.groupby("subject"):
         t0 = time.time()
-        data = {int(r.file): load_rec(r) for r in g.itertuples()}
+        data = {int(r.file): load_rec(r._asdict()) for r in g.itertuples()}
         rest = g[g.state == "B"].file.tolist()
         calib_file, others = rest[0], rest[1:]
         for r in g.itertuples():
