@@ -24,6 +24,7 @@ Run the steps from the repo root, in order:
 .venv\Scripts\python -m scripts.replicate_original  # results/replication (the original model, ported)
 .venv\Scripts\python -m scripts.simple_models     # results/simple_models (ridge, U-Net)
 .venv\Scripts\python -m scripts.gans              # results/gans (pix2pix, CycleGAN paired / unpaired)
+.venv\Scripts\python -m scripts.calibration       # results/calibration (10-60 s of a new person's data)
 ```
 
 `docs/01_original.md` describes what the original code did and what the port reproduces.
