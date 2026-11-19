@@ -142,6 +142,29 @@ results in `docs/09_holdout.md`).
 Small test sets swing. The pre-registered plan is what makes this result reportable rather than
 something to quietly re-run.
 
+## After the holdout: four follow-ups
+
+These came after the holdout, so they are development or external evidence, not holdout results.
+
+- **A new sensor, a new lab, 32 new people** (`docs/11_external.md`, SensSmartTech on PhysioNet).
+  - Without calibration, every CEBS-trained model scores r ≈ 0.1-0.2. A different accelerometer and chest
+    position are enough to break them.
+  - Fine-tuning on 10 s from a different recording of the same person reaches 0.86, or 0.90 with 26 s,
+    better than no calibration for every person.
+  - After exercise, at higher heart rates, it falls to about 0.5: a calibration at rest does not cover a
+    faster heart.
+- **How little calibration?** (`docs/12_cheap_calibration.md`)
+  - 3 s of ECG, about three beats, already gives 0.94 on CEBS.
+  - Beat times alone, without the ECG's shape, give 0.84, and only if the times are accurate to a few ms.
+  - The person-specific part is mostly their beat shape.
+- **A heartbeat check** (`docs/10_gate.md`).
+  - The periodicity of the SCG's energy envelope passes 92% of real 8 s windows and essentially none of the
+    noise or scrambled SCG. That stops the models from drawing an ECG out of nothing.
+  - It is weakest on the person with the most irregular rhythm.
+- **Was the holdout reversal about training-set size?** No (`docs/13_loso.md`). Trained on 15 people, the
+  U-Net still beats the baseline for 14 of 16 development people (0.65 against 0.41). The four holdout
+  people just suited the baseline.
+
 ## What I would tell my 2022 self
 
 - **Split by person, and say which question the number answers.** Same-person r of 0.9 and new-person r
@@ -152,8 +175,10 @@ something to quietly re-run.
   miss if you only look at the final r.
 - **Look at the data files.** Two of three result columns were the same recording.
 - **Lock a holdout and write the plan down before you look.** Here it overturned a 14-of-16 result.
-- **The interesting result is not the architecture.** It is that the person-specific part is small:
-  about 10 seconds of their own data.
+- **The interesting result is not the architecture.** It is that the person-specific part is small: a few
+  seconds of their own ECG. It survives a new sensor and lab (0.86-0.90), but not a big change in heart rate.
+- **Test what the model does when there is nothing to see.** Every model here drew a convincing ECG from
+  noise. A ten-line periodicity check stops that.
 
 ## Reproduce
 

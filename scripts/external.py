@@ -163,7 +163,8 @@ def summarize():
     pp = df[df.part == "rest"].groupby(["label", "subject"]).r.mean().unstack(0)
     cmp = []
     for a, b in (("unet", "avg_beat"), ("cycle_paired", "unet"), ("unet_finetune 10s", "unet"),
-                 ("unet_finetune 10s", "avg_beat_own 10s"), ("unet_finetune 30s", "avg_beat_own 30s")):
+                 ("unet_finetune 10s", "avg_beat_own 10s"),
+                 (f"unet_finetune {CALIB_S[-1]}s", f"avg_beat_own {CALIB_S[-1]}s")):
         d = (pp[a] - pp[b]).dropna()
         cmp.append(f"- {a} vs {b}: better for {(d > 0).sum()} of {len(d)} people; mean r difference {d.mean():+.3f}")
     hr = df[(df.part == "after_activity") & (df.label == "unet_finetune 10s")]
@@ -212,8 +213,10 @@ def plot_examples():
 
 
 def main():
+    import sys
     OUT.mkdir(parents=True, exist_ok=True)
-    run()
+    if "--summary-only" not in sys.argv:
+        run()
     summarize()
     plot_examples()
 

@@ -6,6 +6,8 @@ a plain supervised model at it?
 
 Data: the [CEBS database](https://physionet.org/content/cebsdb/1.0.0/) on PhysioNet (20 people; ECG leads
 I and II, respiration and SCG at 5 kHz; ODC-By 1.0).
+External test data: [SensSmartTech](https://physionet.org/content/senssmarttech/1.0.0/) on PhysioNet
+(Lazović et al.; 32 people; ECG and a chest accelerometer; CC BY 4.0).
 
 ## Setup
 
@@ -63,8 +65,16 @@ Holdout (4 people, scored once): the U-Net fine-tuned on 10 s reaches 0.94, the 
 holdout person. Without calibration, the average-heartbeat baseline (0.69) beat the U-Net (0.60) on these
 four people, reversing the development result. See `docs/09_holdout.md`.
 
+Follow-ups, after the holdout:
+- **External test** on SensSmartTech (32 new people, a different sensor and lab): CEBS models score r ≈ 0.2
+  without calibration and 0.86 after fine-tuning on 10 s from another recording; about 0.5 after exercise
+  (`docs/11_external.md`).
+- **Cheaper calibration:** 3 s of ECG gives 0.94; beat times alone give 0.84 (`docs/12_cheap_calibration.md`).
+- **Heartbeat check:** SCG periodicity passes 92% of real windows and about 0% of noise (`docs/10_gate.md`).
+- **Leave one out:** trained on 15 people, the U-Net beats the baseline for 14 of 16 (`docs/13_loso.md`).
+
 Notes per phase in `docs/`: what the original did (01), GANs (04), calibration (05), holdout plan (06),
-clinical scoring (07), a write-up draft (08), and the holdout results (09).
+clinical scoring (07), a write-up draft (08), holdout results (09), and follow-ups (10-13).
 
 ## Evaluation rules
 
