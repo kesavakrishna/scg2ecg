@@ -19,7 +19,8 @@ The test data is the same 'late' part as in every other table. U-Net rows are av
 For scale: a U-Net trained on about 35 minutes of each person's own data reaches 0.991.
 
 - **Fine-tuning on 10 s of a new person's paired data takes the U-Net from 0.62 to 0.96.** It improves
-  every one of the 16 people. The worst person goes from 0.03 to 0.90 (0.94 with 60 s). With 60 s, R-peak
+  every one of the 16 people. Subject 6 goes from 0.03 to 0.98, and the lowest score is now 0.90 (0.94
+  with 60 s). With 60 s, R-peak
   timing error drops to 2 ms and beat PPV rises from 0.93 to 0.99, so the invented beats are gone.
 - **Correcting the delay alone recovers part of the gap** (0.62 to 0.72; better for 12 of 16 people,
   p = 0.003). The delay fitted on 10 s agrees with the best delay on the test data within a few ms for

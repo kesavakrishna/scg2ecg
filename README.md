@@ -25,9 +25,35 @@ Run the steps from the repo root, in order:
 .venv\Scripts\python -m scripts.simple_models     # results/simple_models (ridge, U-Net)
 .venv\Scripts\python -m scripts.gans              # results/gans (pix2pix, CycleGAN paired / unpaired)
 .venv\Scripts\python -m scripts.calibration       # results/calibration (10-60 s of a new person's data)
+.venv\Scripts\python -m scripts.calibration --part transfer   # calibration from a separate recording
+.venv\Scripts\python -m scripts.clinical        # results/clinical (intervals, irregular beats, noise input)
+.venv\Scripts\python -m scripts.holdout         # results/holdout (scored once; plan in docs/06)
 ```
 
-`docs/01_original.md` describes what the original code did and what the port reproduces.
+Set `SCG_DEVICE=cpu` to keep a step off a GPU that other programs are using.
+
+## Results in brief
+
+Mean Pearson r over the 16 development people. The first two rows use the original protocol (same
+person, same 5 min recording); the others score each person's 'late' data.
+
+| method | r |
+|---|---|
+| the original model and protocol (same person, same 5 min recording) | 0.83 |
+| average-heartbeat baseline on that protocol | 0.94 |
+| average-heartbeat baseline, unseen people | 0.37 |
+| 1D U-Net, unseen people | 0.62 |
+| paired GANs (pix2pix, CycleGAN, 2-generator / 6-discriminator cGAN) | 0.59-0.62 |
+| CycleGAN, unpaired | 0.12 |
+| U-Net fine-tuned on 10 s of the new person's data | 0.96 |
+| U-Net, same people it was trained on | 0.99 |
+
+Holdout (4 people, scored once): the U-Net fine-tuned on 10 s reaches 0.94, the best method for every
+holdout person. Without calibration, the average-heartbeat baseline (0.69) beat the U-Net (0.60) on these
+four people, reversing the development result. See `docs/09_holdout.md`.
+
+Notes per phase in `docs/`: what the original did (01), GANs (04), calibration (05), holdout plan (06),
+clinical scoring (07), a write-up draft (08), and the holdout results (09).
 
 ## Evaluation rules
 

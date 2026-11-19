@@ -103,10 +103,15 @@ def clinical_rows(s, name, seed, preds, test):
 
 
 def score_all(sp):
-    rows, clin = [], []
+    path, cpath = OUT / "per_person.csv", OUT / "clinical.csv"
+    rows = pd.read_csv(path).to_dict("records") if path.exists() else []
+    clin = pd.read_csv(cpath).to_dict("records") if cpath.exists() else []
+    done = {r["subject"] for r in rows}
     ab = AverageBeat(FS).fit(avg_beat_pieces(sp["dev"], "all"))
     ab.tune(avg_beat_pieces(sp["dev"], "all"))
     for s in sp["holdout"]:
+        if s in done:
+            continue
         t0 = time.time()
         test = load_segments(segments(s, FS)["late"], FS)
         raw = [raw_piece(sg) for sg in segments(s, FS)["late"]]
@@ -141,8 +146,8 @@ def score_all(sp):
                     if c == CLIN_CALIB:
                         clin.append(clinical_rows(s, f"unet_finetune_{c}s", seed, pf, test))
         print(f"holdout subject {s} scored ({(time.time() - t0) / 60:.1f} min)", flush=True)
-    pd.DataFrame(rows).to_csv(OUT / "per_person.csv", index=False)
-    pd.DataFrame(clin).to_csv(OUT / "clinical.csv", index=False)
+        pd.DataFrame(rows).to_csv(OUT / "per_person.csv", index=False)  # after each person: an interrupted
+        pd.DataFrame(clin).to_csv(OUT / "clinical.csv", index=False)    # run keeps what it finished
 
 
 def summarize():

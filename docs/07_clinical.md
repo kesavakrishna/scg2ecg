@@ -54,6 +54,7 @@ zeros. The result is in `results/clinical/flatline.png`.
 | U-Net | 0.88 | 0.88 | 0.85 | 0.20 |
 | pix2pix (adv 0.1) | 0.91 | 0.88 | 0.85 | 0.20 |
 | CycleGAN, paired | 0.93 | 0.96 | 1.00 | 0.23 |
+| cGAN, 2 generators / 6 discriminators | 0.93 | 0.96 | 1.01 | 0.21 |
 
 - **Every model draws a full-size ECG from noise.** From shuffled SCG or white noise, the output has
   QRS-like spikes and T-waves at random times (neurokit finds about 90 "beats" per minute), with the same

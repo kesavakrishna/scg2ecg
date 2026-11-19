@@ -1,0 +1,6 @@
+,epochs
+unet,2
+pix2pix_adv0.1,2
+cycle_paired,2
+cycle_unpaired,4
+cgan_2g6d,7
