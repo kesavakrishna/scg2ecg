@@ -259,7 +259,7 @@ def plot_examples(sp, out):
     t = np.arange(W) / FS
     fig, axes = plt.subplots(len(show), 1, figsize=(13, 2.8 * len(show)), sharex=True)
     rng = np.random.default_rng(4)
-    colors = ["#c0392b", "#8e44ad", "#d35400", "#16a085"]
+    colors = ["#c0392b", "#8e44ad", "#d35400", "#16a085", "#b7950b"]
     for ax, s in zip(axes, show):
         k = next(i for i, f in enumerate(sp["folds"]) if s in f["test"])
         seg = segs([s], "late")[0]

@@ -78,3 +78,37 @@ CycleGAN, matches the supervised U-Net at best; without paired data the CycleGAN
 average-heartbeat baseline. The original paper's model was supervised in practice (Phase 1 note), which
 fits: the supervised signal does the work. What limits SCG-to-ECG for a new person is mostly that
 person's timing, not the choice of loss.
+
+## Addendum: a cGAN with 2 generators and 6 discriminators
+
+A paired conditional GAN with two generators (SCG to ECG, ECG to SCG) and six discriminators, three per
+output domain, each seeing the input signal next to the real or generated output:
+
+- **Waveform:** about one beat wide.
+- **Coarse:** the waveform averaged down 4x, about 3.5 s wide, so it judges rhythm.
+- **Spectrogram:** log-magnitude, 0-40 Hz.
+
+The cycle and paired L1 terms are as in `cycle_paired`, and the six adversarial terms are averaged per
+domain, so the total adversarial weight is the same. Same folds, seeds and test data as everything above.
+
+| method | r | beats U-Net | r after best shift | R amplitude / real |
+|---|---|---|---|---|
+| U-Net | 0.616 | | 0.753 | 1.06 |
+| cycle_paired | 0.612 | 4 / 16 (p = 0.43) | 0.757 | 1.09 |
+| cgan_2g6d | 0.605 | 6 / 16 (p = 0.38) | 0.756 | 1.09 |
+
+- **The extra discriminators change nothing measurable.** r, beat detection, timing, beat shape, time
+  shift and clinical behaviour on noise all sit with the other paired models: it also draws a full-size
+  ECG from white noise (`results/clinical/flatline.csv`).
+- **A first version failed, and why is instructive.** With all spectrogram bins, the spectral
+  discriminator told real from generated almost perfectly (score 1.09 against 0.08 after 200 steps). It
+  did so from the near-empty band above the 40 Hz filter edge, which the log scale magnifies. Its gradient
+  on the generator was then 23x the L1 term's. Restricting it to 0-40 Hz fixed that; the fix is in
+  `scg2ecg/gans.py: SpecD`.
+- **Training starts badly and recovers.** For the first 2-3 epochs r on the tune people is negative while
+  the six discriminators win outright (real-vs-fake score gaps of 0.8-0.98). It then recovers, as the
+  paired CycleGAN does, so it was given more patience: early stopping chose epochs 1-16.
+- By the chosen epoch, the coarse and spectral heads are back near chance (score gaps of about 0.01-0.1
+  in most runs). Only the beat-wide waveform head keeps a gap (0.2-0.6). There is little left for the
+  extra discriminators to push on, which matches the main finding above.
+- It costs about 3x the paired CycleGAN per step (131 s per quarter-size epoch with the GPU shared).
