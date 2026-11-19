@@ -7,6 +7,8 @@ generator, windows, optimiser and test data as the U-Net in scripts/simple_model
   pix2pix_adv1     the same with a 10x stronger adversarial term
   cycle_paired     CycleGAN with the paired L1 terms added
   cycle_unpaired   CycleGAN proper: SCG and ECG windows drawn independently
+  cgan_2g6d        paired conditional GAN with 2 generators and 6 discriminators (3 per domain: waveform,
+                   coarse waveform, spectrogram), plus the cycle and paired L1 terms
 
 Every method, the U-Net (from its saved weights) and the average-heartbeat baseline are also scored for beat
 shape at the true R-peaks (scg2ecg.metrics.morphology).
@@ -47,6 +49,11 @@ CONFIGS = {
     # two generators and two discriminators per step: half the windows per epoch keeps the run time down
     "cycle_paired": GanConfig("cycle", paired=True, stride=2048),
     "cycle_unpaired": GanConfig("cycle", paired=False, stride=2048, max_epochs=16, patience=5),
+    # 2 generators (SCG->ECG, ECG->SCG) and 6 conditional discriminators: waveform, 4x-coarse waveform and
+    # spectrogram, for each output domain; otherwise as cycle_paired
+    # quarter of the windows per epoch (3x slower per step) and more patience: like the cycle models it starts
+    # with r < 0 while its strong discriminators dominate, then recovers (results/gans/histories.csv)
+    "cgan_2g6d": GanConfig("multi", paired=True, stride=4096, max_epochs=24, patience=6),
 }
 METRICS = ["r", "rmse", "prd", "beat_se", "beat_ppv", "r_timing_abs_ms", "rr_mae_ms",
            "template_r", "beat_r", "r_amp_ratio"]
@@ -203,7 +210,7 @@ def lag_analysis(sp, out, max_ms: float = 200.0) -> pd.DataFrame:
     that maximises r between output and real ECG, and r at that shift. A positive lag: the output is late."""
     rows = []
     L = int(max_ms * FS / 1000)
-    models = ["unet", "pix2pix_adv0.1", "cycle_paired", "cycle_unpaired"]
+    models = ["unet", "pix2pix_adv0.1", "cycle_paired", "cycle_unpaired", "cgan_2g6d"]
     for k, fold in enumerate(sp["folds"]):
         for m in models:
             for seed in SEEDS:

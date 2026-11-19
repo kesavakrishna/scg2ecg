@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import os
 import time
 
 import matplotlib
@@ -35,7 +36,8 @@ from scg2ecg.windows import WindowDataset, load_segments, stitch_predict
 FS = 500
 LEN = 2048
 OUT = RESULTS / "simple_models"
-DEV = "cuda" if torch.cuda.is_available() else "cpu"
+# SCG_DEVICE=cpu keeps a job off a GPU that other processes are using (shared 8 GB card: CUDA faults)
+DEV = os.environ.get("SCG_DEVICE") or ("cuda" if torch.cuda.is_available() else "cpu")
 ALPHAS = [1e0, 1e1, 1e2, 1e3, 1e4, 1e5]
 SEEDS = (0, 1, 2)
 
@@ -155,6 +157,10 @@ def train_unet(train, val, seed: int, max_epochs: int = 15, patience: int = 3, s
             loss.backward()
             opt.step()
             losses.append(loss.item())
+        if val is None:  # fixed number of epochs (holdout models): keep the last one
+            hist.append({"epoch": epoch, "train_l1": float(np.mean(losses)), "seconds": time.time() - t0})
+            best_state = model.state_dict()
+            continue
         r = mean_r(lambda x: stitch_predict(model, x, LEN, DEV), val)
         hist.append({"epoch": epoch, "train_l1": float(np.mean(losses)), "val_r": r, "seconds": time.time() - t0})
         if r > best:

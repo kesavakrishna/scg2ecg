@@ -41,3 +41,21 @@ For scale: a U-Net trained on about 35 minutes of each person's own data reaches
   separate later record) is as close as this data gets.
 - With paired data from the person, the task becomes mostly same-person mapping, which was always easy
   (Phase 3: 0.99). The finding is how little of it is needed: 10 s.
+
+## Does a calibration carry across recordings? (`results/calibration/transfer.md`)
+
+Same test data (the late part of the music record only), 30 s of calibration from three places:
+
+| method | start of the same record (~35 min earlier) | start of the separate after-music record |
+|---|---|---|
+| U-Net, shifted | 0.714 | 0.737 |
+| U-Net, fine-tuned | 0.972 | **0.982** |
+| person's own average beat | 0.904 | 0.875 |
+
+- Calibrating on a different recording costs nothing for the U-Net; it is slightly better (+0.01, 11 of
+  16 people). The after-music record starts right after the test minutes, so it is also closer in time.
+  That probably explains the small gain: a calibration made nearer the measurement fits it better.
+- Subject 1, the one person with a separate rest record (made before the music record), gets 0.928 from a
+  rest-record calibration, against 0.921 from the music record's start.
+- So within one session, the calibration does not depend on which recording it came from. Whether it
+  survives re-attaching the sensor, or a different day, cannot be tested on CEBS.
