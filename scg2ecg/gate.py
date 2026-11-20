@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import numpy as np
 from scipy.ndimage import uniform_filter1d
+from scipy.signal import find_peaks
 
 from .data import bandpass
 
@@ -52,3 +53,34 @@ def seed_agreement(preds: list[np.ndarray]) -> float:
             d = np.sqrt((a * a).sum() * (b * b).sum())
             rs.append(float((a * b).sum() / d) if d > 0 else 0.0)
     return float(np.mean(rs))
+
+
+def beat_regularity(x: np.ndarray, fs: int) -> float:
+    """Share of intervals between detected vibration beats within +-20% of the window's median interval. A real
+    rhythm with a few early beats keeps most intervals near the median; fragments of scrambled SCG land at random
+    gaps. 0 if fewer than 3 beats."""
+    e = envelope(x, fs)
+    pk, _ = find_peaks(e, distance=int(0.33 * fs), prominence=0.25 * np.percentile(e, 95))
+    if len(pk) < 3:
+        return 0.0
+    d = np.diff(pk).astype(float)
+    return float(np.mean(np.abs(d - np.median(d)) <= 0.2 * np.median(d)))
+
+
+def beat_consistency(x: np.ndarray, fs: int) -> float:
+    """Do the vibration beats in this window look alike, whenever they come? Beats are found as peaks of the
+    5-30 Hz envelope (at most 180 bpm); the score is the median correlation of each beat (-100..+400 ms) with the
+    window's median beat. Unlike periodicity, it does not penalise uneven beat timing. 0 if fewer than 3 beats."""
+    e = envelope(x, fs)
+    pk, _ = find_peaks(e, distance=int(0.33 * fs), prominence=0.25 * np.percentile(e, 95))
+    a, b = int(0.1 * fs), int(0.4 * fs)
+    pk = pk[(pk >= a) & (pk < len(x) - b)]
+    if len(pk) < 3:
+        return 0.0
+    beats = np.stack([x[p - a:p + b] for p in pk]).astype(np.float64)
+    beats -= beats.mean(1, keepdims=True)
+    med = np.median(beats, 0)
+    med -= med.mean()
+    num = beats @ med
+    den = np.sqrt((beats ** 2).sum(1) * (med ** 2).sum()) + 1e-12
+    return float(np.median(num / den))

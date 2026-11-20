@@ -68,9 +68,9 @@ class UNet1d(nn.Module):
     """Encoder-decoder with skip connections. Input length must be divisible by 2**len(ch)-1.
     Receptive field at the bottleneck covers about 2 s at 500 Hz, enough to see neighbouring beats."""
 
-    def __init__(self, ch=(16, 32, 64, 128, 256), k: int = 9):
+    def __init__(self, ch=(16, 32, 64, 128, 256), k: int = 9, cin: int = 1):
         super().__init__()
-        self.inc = Block(1, ch[0], k)
+        self.inc = Block(cin, ch[0], k)
         self.down = nn.ModuleList(nn.Conv1d(ch[i], ch[i], 2, stride=2) for i in range(len(ch) - 1))
         self.enc = nn.ModuleList(Block(ch[i], ch[i + 1], k) for i in range(len(ch) - 1))
         self.up = nn.ModuleList(nn.ConvTranspose1d(ch[i + 1], ch[i], 2, stride=2) for i in reversed(range(len(ch) - 1)))
