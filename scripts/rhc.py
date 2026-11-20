@@ -4,8 +4,10 @@ Data: 83 right-heart-catheter recordings (~10 min each) of 73 patients. A chest 
 a single-lead ECG and a 3-axis accelerometer; the catheter lab records a standard ECG, including lead I. Everything is
 at 500 Hz and synchronised. Used here: ECG lead I (target, as in CEBS), the patch's dorsal-ventral axis (the axis
 CEBS measures) and, for B5, all three axes. Only recordings marked fine_alignment are used, and only those where the
-lead I detector finds a plausible heart rate (30-150 bpm). R-peaks: neurokit2 on lead I.
-Per recording: calibration clip from 10 s (10 or 30 s long); test = from 60 s to the end.
+lead I detector finds a plausible heart rate (30-150 bpm); 17 of the 83 recordings have no lead I channel at all
+and are left out. R-peaks: neurokit2 on lead I.
+Per recording: calibration clip from 10 s (10 or 30 s long); test = from 60 s, at most 10 min (amended before any
+result was produced, for run time: recordings turned out to average 29 min).
 
 Plan, fixed before running (committed with this file):
   A2 transfer   CEBS final U-Net (3 seeds), no calibration; shifted (30 s); fine-tuned (10 s, 30 s; 100 steps);
@@ -50,6 +52,7 @@ from .simple_models import DEV, FS, LEN, SEEDS
 RAW = ROOT / "data" / "external" / "scg_rhc" / "processed_data"
 OUT = RESULTS / "rhc"
 CAL_START_S, TEST_START_S = 10, 60
+TEST_LEN_S = 600  # amended before any result: test parts capped at 10 min (recordings average 29 min; compute)
 FT_STEPS = 100
 AXES = ("patch_ACC_lat", "patch_ACC_hf", "patch_ACC_dv")
 METRICS = ["r", "beat_se", "beat_ppv", "r_timing_abs_ms", "template_r", "beat_r", "r_amp_ratio"]
@@ -99,6 +102,8 @@ def usable(recs: pd.DataFrame) -> pd.DataFrame:
     for row in recs.itertuples():
         if not row.fine_alignment:
             continue
+        if "ECG_lead_I" not in wfdb.rdheader(str(RAW / row.record)).sig_name:  # 17 of 83 have no lead I
+            continue
         d = load(row.record)
         minutes = len(d["y"]) / FS / 60
         hr = len(d["r"]) / minutes if minutes else 0
@@ -126,9 +131,15 @@ def irregular_split(t, pred) -> dict:
     return out
 
 
+_REAL = {}
+
+
 def intervals(t, pred) -> dict:
     _, b = delineate((None, pred, t["r"]))
-    _, rb = delineate((None, t["y"], t["r"]))
+    key = (len(t["y"]), float(t["y"][:1000].sum()))
+    if key not in _REAL:
+        _REAL[key] = delineate((None, t["y"], t["r"]))[1]
+    rb = _REAL[key]
     d = b.merge(rb, on="r", suffixes=("", "_real"))
     return {f"{c}_beat_mae": float(np.nanmedian(np.abs(d[c] - d[f"{c}_real"]))) for c in ("qrs_ms", "qt_ms")} | \
            {"qrs_ms_real": float(np.nanmedian(d.qrs_ms_real))}
@@ -209,7 +220,7 @@ def transfer(recs: pd.DataFrame):
             continue
         t0 = time.time()
         d = load(row.record)
-        test = cut(d, TEST_START_S * FS)
+        test = cut(d, TEST_START_S * FS, (TEST_START_S + TEST_LEN_S) * FS)
         clips = {c: cut(d, c0, c0 + c * FS) for c in (10, 30)}
         base = {"record": row.record, "patient": row.patient, "visit": row.visit}
         for c in (10, 30):
@@ -250,7 +261,7 @@ def revisit(recs: pd.DataFrame):
             continue
         first, second = g.iloc[0].record, g.iloc[1].record
         d1, d2 = load(first), load(second)
-        test = cut(d2, TEST_START_S * FS)
+        test = cut(d2, TEST_START_S * FS, (TEST_START_S + TEST_LEN_S) * FS)
         sources = {"same_visit": cut(d2, c0, c0 + 30 * FS), "previous_visit": cut(d1, c0, c0 + 30 * FS)}
         base = {"patient": p, "calib_record": first, "test_record": second}
         for src, clip in sources.items():
@@ -335,7 +346,9 @@ def axes(recs: pd.DataFrame):
         tune_p = rest[:max(2, len(rest) // 10)]
         train_p = rest[len(tune_p):]
         seg = lambda ps, a: [cut(load(r), a) for r in recs[recs.patient.isin(ps)].record]
-        train, val = seg(train_p, 0), seg(tune_p, TEST_START_S * FS)
+        train = seg(train_p, 0)
+        val = [cut(load(r), TEST_START_S * FS, (TEST_START_S + 120) * FS)
+               for r in recs[recs.patient.isin(tune_p)].record]  # 2 min per tune recording for early stopping
         tests = recs[recs.patient.isin(test_p)]
         for cin in (1, 3):
             for seed in SEEDS:
@@ -346,7 +359,7 @@ def axes(recs: pd.DataFrame):
                 key = "x3" if cin == 3 else "x"
                 for row in tests.itertuples():
                     d = load(row.record)
-                    test = cut(d, TEST_START_S * FS)
+                    test = cut(d, TEST_START_S * FS, (TEST_START_S + TEST_LEN_S) * FS)
                     pred = lambda m: predict3(m, test[key] if cin == 3 else test["x"][None])
                     base = {"fold": k, "cin": cin, "seed": seed, "record": row.record, "patient": row.patient}
                     rows.append(scored({**base, "method": "no_calibration"}, test, pred(model)))

@@ -1,0 +1,59 @@
+record,patient,visit,fine_alignment,nyha,challenge,history,minutes,hr
+TRM107-RHC1,107,1,True,1,0,"NICM s/p OHTx, CKD3, HTN",9.9,61.5
+TRM127-RHC1,127,1,True,3,0,"HFpEF, coronary vasospasm, DM, VSD repair, atrial arrhythmias s/p ablation, OSA on CPAP, s/p CardioMEMS; Control RHC (per LK) ",28.23,90.5
+TRM128-RHC1,128,1,True,3,0,"HFrEF, NICM, non-occlusive CAD, HTN, DM2, s/p CRT-D",8.57,44.4
+TRM137-RHC1,137,1,True,2,0,"HFrEF s/p LVAD, NICM s/p CRT-D, HTN, VT, s/p CardioMEMS",5.95,53.9
+TRM145-RHC1,145,1,True,3,0,"HFrEF, D-TGA s/p Blalock Hanlon & Mustard procedure, SSS s/p PM, aflutter s/p ablation, s/p atrial switch",50.1,75.4
+TRM145-RHC2,145,2,True,3,0,"HFrEF s/p OHTx, D-TGA, post-transplant HTN, pHTN, RV dysfunction w/moderate TR, acute renal failure s/p HD",22.27,91.3
+TRM148-RHC1,148,1,True,1,0,"HFrEF s/p OHTx, PKD s/p kidney transplant, NICM, HTN ",3.55,93.5
+TRM152-RHC1,152,1,True,3,1,"HFrEF, ICM, CAD s/p CABG, VT s/p CRT-D, HTN, DM, OSA",45.08,69.5
+TRM155-RHC1,155,1,True,3,0,"HFrEF, CAD, dilated CM s/p CRT-D, HTN",7.78,81.7
+TRM158-RHC1,158,1,True,3,0,"HFrEF 2/2 NICM, AF, LBBB, multiple intracardiac thrombi",19.4,72.4
+TRM158-RHC2,158,2,True,4,1,"HFrEF, hereditary CM s/p CRT-D, AF",65.38,93.1
+TRM158-RHC3,158,3,True,0,0,"HFrEF 2/2 familial NICM s/p OHT, HTN",21.32,81.5
+TRM158-RHC4,158,4,True,0,0,"HFrEF 2/2 familial NICM s/p OHT, HTN, AKI ",8.12,96.6
+TRM159-RHC1,159,1,True,4,0,"HFrEF s/p ICD, ICM, CAD, HTN, DM s/p pancreactectomy, CKD3; PA & PCW were measured twice",20.65,60.4
+TRM159-RHC2,159,2,True,3,0,"HFrEF s/p VAD, ICM s/p ICD, CAD, HTN, pHTN, DM, CKD3",10.08,70.6
+TRM160-RHC1,160,1,True,3,0,"HFrEF 2/2 NICM, VT s/p ablation, s/p CRT-D, AF s/p MAZE, HTN, DM, MR s/p MVR; Unable to shave pt's chest before placing wearable",21.15,65.0
+TRM163-RHC1,163,1,True,3,1,"HFrEF, NICM s/p CRT-D, HTN",35.12,80.5
+TRM164-RHC1,164,1,True,2,1,"HFrEF, NICM, ESRD on HD",52.9,88.8
+TRM170-RHC1,170,1,True,3,0,"HFpEF w/HCM, VT s/p ICD, pAF",22.95,56.6
+TRM170-RHC2,170,2,True,3,1,"HFrEF w/HCM, VT s/p ICD, AF/flutter, AKI on CKD3",39.85,64.8
+TRM172-RHC1,172,1,True,3,1,"HFpEF, pHTN, AF, CKD3, congestive hepatopathy, DM, OSA, s/p CardioMEMS",45.07,62.2
+TRM174-RHC1,174,1,True,3,0,"HFpEF, ICM, CAD s/p CABG + PCI",13.95,53.9
+TRM176-RHC1,176,1,True,2,1,"HFpEF, HTN, CKD3, AF/Aflutter s/p ablation, RA c/b pulmonary fibrosis & pHTN s/p BLT",29.32,75.1
+TRM178-RHC1,178,1,True,3,0,"HFpEF, pHTN, HCM s/p myectomy, systemic HTN, OSA on CPAP, AF, CAD s/p CABG, DM",12.95,105.9
+TRM179-RHC1,179,1,True,3,0,"HFrEF, NICM s/p CRT-D, RV dysfunction, DM",26.08,78.7
+TRM181-RHC1,181,1,True,3,1,"HFrEF, NICM s/p ICD, pAF, CKD, HTN, non-obstructive CAD, OSA",32.3,74.0
+TRM186-RHC1,186,1,True,3,0,"HFrEF, NICM s/p ICD, pAF, DM, HTN, CKD3, s/p CardioMEMS",8.67,66.6
+TRM187-RHC1,187,1,True,2,0,"HFrEF, NICM, HTN, CKD, DM, OSA, s/p CardioMEMS; catheter moved early during 2:04:23 PM measurements; Second PA measurements (2:43:41 PM) measured post CardioMEMS implant",47.85,63.8
+TRM195-RHC1,195,1,True,3,0,"HFrEF, NIDCM s/p CRT-D, OSA on CPAP",16.72,70.8
+TRM195-RHC2,195,2,True,3,0,"HFrEF, NIDCM s/p CRT-D, OSA on CPAP",23.78,70.0
+TRM197-RHC1,197,1,True,3,0,"HFrEF, ICM, CAD s/p CABG, moderate MR, LV thrombus  ",30.07,70.6
+TRM198-RHC1,198,1,True,3,1,"HFpEF 2/2 HCM, pHTN, CAD, SLE, pAF, SSS s/p PPM, s/p cardioMEMS",86.97,69.7
+TRM201-RHC1,201,1,True,2,0,"HFrEF, ICM s/p CRT-D, CAD s/p CABG, HTN, DM; pt actively listed for heart transplant",15.72,74.1
+TRM203-RHC1,203,1,True,4,1,"HF w/borderline EF, pHTN, OSA on CPAP",33.82,71.6
+TRM208-RHC1,208,1,True,3,0,"HFrEF, NICM s/p CRT-D, severe TR, chronic AF s/p MAZE",16.87,69.8
+TRM219-RHC1,219,1,True,3,0,"HFrEF now w/recovering EF, NICM s/p CRT-D, CKD",8.95,49.4
+TRM223-RHC1,223,1,True,3,0,"HFrEF, NICM s/p ICD, DM",7.3,110.3
+TRM235-RHC1,235,1,True,3,1,"HFrEF 2/2 NICM s/p ICD, pAF, OSA, s/p carotid body simulator",64.52,96.0
+TRM243-RHC1,243,1,True,2,1,"HFrEF, NICM 2/2 peripartum CM s/p ICD, pAF/fluttter, VT",29.5,87.3
+TRM244-RHC1,244,1,True,3,0,"HFrEF, NIDCM, DM",17.93,86.3
+TRM245-RHC1,245,1,True,3,0,"HFrEF, NICM, VF s/p ICD, OSA, HTN",27.0,80.9
+TRM246-RHC1,246,1,True,2,0,"HFpEF, high output HF, pHTN, AF",18.17,97.3
+TRM248-RHC1,248,1,True,4,1,"HFrEF, NICM s/p CRT-D, VSD, HTN",45.22,87.2
+TRM251-RHC1,251,1,True,1,0,"HFrEF 2/2 non-obstructive HCM, CHB s/p CRT-D, pAF, OSA on CPAP, s/p CardioMEMS; CardioMEMS not working ",13.72,47.3
+TRM252-RHC1,252,1,True,2,0,"HFrEF 2/2 ICM & NICM, CAD s/p PCI to LAD",19.77,60.7
+TRM253-RHC1,253,1,True,3,1,"HFpEF, PH, CAD, pAF s/p PVI, HTN",46.78,69.0
+TRM254-RHC1,254,1,True,4,1,"HFrEF 2/2 ICM, CAD, VT s/p ICD, OSA on CPAP, DM, AKI, cirrhosis; Baseline PA - Catheter not held still for 1 min.; S/P Nipride PCW - Catheter not held still for 1 min. ",38.5,45.5
+TRM255-RHC1,255,1,True,2,1,"HFrEF, ICM/NICM s/p CRT-D, CAD s/p LAD stent, non-rheumatic mitral regurgitation",60.22,96.8
+TRM256-RHC1,256,1,True,2,0,"HFrEF 2/2 NICM, s/p ICD; PA 1 min. measurement started slightly before listed timestamp; Pt spoke during PCW 1 min. measurement ",17.85,87.5
+TRM258-RHC1,258,1,True,3,0,"HFrEF 2/2 peripartum CM, s/p ICD, severe MR, moderate TR, severe PH, HTN, ESRD on PD",18.87,70.4
+TRM259-RHC1,259,1,True,3,0,"HFrEF 2/2 NICM, s/p ICD; PCW 1 min. measurement started slightly before timestamp ",17.4,64.1
+TRM259-RHC2,259,2,True,3,1,"HFrEF 2/2 NICM, s/p ICD, pVT; Legs Up PCW recording was started slightly before time stamp ",38.47,68.3
+TRM268-RHC1,268,1,True,2,1,"HFrEF, NICM, LV thrombus",49.45,84.1
+TRM272-RHC1,272,1,True,3,1,"HFrEF, ICM s/p ICD, CAD s/p CABG & PCI, DM2 ",43.88,63.7
+TRM273-RHC1,273,1,True,3,1,"HFrEF, NIDCM s/p ICD",55.23,110.5
+TRM274-RHC1,274,1,True,3,1,"HFrEF, NICM s/p ICD, peripartum CM, HTN, DM2, COPD on O2",67.38,100.9
+TRM275-RHC1,275,1,True,2,0,"HFrEF, NICM, HTN",34.02,94.3
+TRM276-RHC1,276,1,True,3,1,"HFrEF, ICM s/p ICD, CAD s/p PCI, VT, pAF/AFl, DM2, PAD, HTN, OSA on intermittent CPAP, CKD",27.82,89.1
